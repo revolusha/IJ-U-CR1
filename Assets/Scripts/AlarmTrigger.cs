@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class AlarmTrigger : MonoBehaviour
@@ -14,6 +15,7 @@ public class AlarmTrigger : MonoBehaviour
     private bool _isPlayingSound;
     private bool _isVolumeFadeOut;
     private float _passedTime;
+    private string _alarmTrigger;
 
     private void Start()
     {
@@ -50,40 +52,48 @@ public class AlarmTrigger : MonoBehaviour
             if (_isPlayingSound == false)
             {
                 _isPlayingSound = true;
+                StartCoroutine(WobbleSoundVolume());
                 _audioSource.Play();
             }
 
-            WobbleSoundVolume();
         }
         else
         {
             _audioSource.Stop();
+            StopCoroutine(WobbleSoundVolume());
         }
 
         _currentVolume = _audioSource.volume;
     }
 
-    private void WobbleSoundVolume()
+    private IEnumerator WobbleSoundVolume()
     {
+        bool isDoingAlways = true;
         float targetVolume;
 
-        if (_isVolumeFadeOut)
+        while (isDoingAlways)
         {
-            targetVolume = _minVolume;
-        }
-        else
-        {
-            targetVolume = _maxVolume;
-        }
+            if (_audioSource.volume > _maxVolume)
+            {
+                _isVolumeFadeOut = true;
+            }
+            else if (_audioSource.volume < _minVolume)
+            {
+                _isVolumeFadeOut = false;
+            }
 
-        _passedTime += Time.deltaTime;
+            if (_isVolumeFadeOut)
+            {
+                targetVolume = _minVolume;
+            }
+            else
+            {
+                targetVolume = _maxVolume;
+            }
 
-        if (_passedTime > _secondsToChangeVolumeFadeDirection)
-        {
-            _isVolumeFadeOut = !_isVolumeFadeOut;
-            _passedTime = 0;
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetVolume, _volumeFadeSpeed * Time.deltaTime);
+
+            yield return null;
         }
-
-        _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetVolume, _volumeFadeSpeed * Time.deltaTime);
     }
 }
