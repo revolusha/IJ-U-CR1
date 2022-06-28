@@ -23,12 +23,14 @@ public class TopDownMovement : MonoBehaviour
     private ContactFilter2D _contactFilter;
     private RaycastHit2D[] _hitBuffer = new RaycastHit2D[16];
     private List<RaycastHit2D> _hitBufferList = new List<RaycastHit2D>(16);
+    private int _speedHash;
 
     private void OnEnable()
     {
         _animator = GetComponent<Animator>();
         _rigidBody2D = GetComponent<Rigidbody2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        _speedHash = Animator.StringToHash("Speed");
     }
 
     private void Start()
@@ -108,7 +110,7 @@ public class TopDownMovement : MonoBehaviour
         }
 
         float speed = move.normalized.magnitude * distance * _animationSpeedMultiplier;
-        _animator.SetFloat("Speed", speed);
+        _animator.SetFloat(_speedHash, speed);
     }
 
     private Vector2 Turn90Degree(Vector2 vector)
