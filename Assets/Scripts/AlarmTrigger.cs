@@ -9,11 +9,9 @@ public class AlarmTrigger : MonoBehaviour
     [SerializeField] private float _volumeFadeSpeed = 2;
     [SerializeField] private float _currentVolume;
 
+    private Coroutine _soundWobbler;
     private Animator _animator;
     private bool _isTriggered;
-    private bool _isPlayingSound;
-    private bool _isVolumeFadeOut;
-    private float _passedTime;
     private int _alarmTriggerHash;
 
     private void Start()
@@ -22,9 +20,6 @@ public class AlarmTrigger : MonoBehaviour
         _alarmTriggerHash = Animator.StringToHash("IsInside");
         _audioSource.volume = _minVolume;
         _isTriggered = false;
-        _isPlayingSound = false;
-        _isVolumeFadeOut = false;
-        _passedTime = 0;
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
@@ -33,6 +28,7 @@ public class AlarmTrigger : MonoBehaviour
         {
             _isTriggered = true;
             _animator.SetBool(_alarmTriggerHash, _isTriggered);
+            RestartCoroutine();
         }
     }
 
@@ -41,58 +37,51 @@ public class AlarmTrigger : MonoBehaviour
         if (collider.TryGetComponent<Robber>(out Robber robber))
         {
             _isTriggered = false;
-            _isPlayingSound = false;
-            _animator.SetBool(_alarmTriggerHash, _isTriggered);
         }
     }
 
     private void Update()
     {
-        if (_isTriggered)
-        {
-            if (_isPlayingSound == false)
-            {
-                _isPlayingSound = true;
-                StartCoroutine(WobbleSoundVolume());
-                _audioSource.Play();
-            }
-
-        }
-        else
-        {
-            _audioSource.Stop();
-            StopCoroutine(WobbleSoundVolume());
-        }
-
         _currentVolume = _audioSource.volume;
     }
 
-    private IEnumerator WobbleSoundVolume()
+    private void RestartCoroutine()
     {
-        bool isDoingAlways = true;
-        float targetVolume;
+        if (_soundWobbler != null)
+            StopCoroutine(_soundWobbler);
 
-        while (isDoingAlways)
+        _soundWobbler = StartCoroutine(WobbleSoundVolumeController());
+        _audioSource.Play();
+    }
+
+    private IEnumerator WobbleSoundVolumeController()
+    {
+        while (_isTriggered)
         {
-            if (_audioSource.volume >= _maxVolume)
-            {
-                _isVolumeFadeOut = true;
-            }
-            else if (_audioSource.volume <= _minVolume)
-            {
-                _isVolumeFadeOut = false;
-            }
+            yield return WobbleVolumeCycle();
+        }
+    }
 
-            if (_isVolumeFadeOut)
-            {
-                targetVolume = _minVolume;
-            }
-            else
-            {
-                targetVolume = _maxVolume;
-            }
+    private IEnumerator WobbleVolumeCycle()
+    {
+        float targetVolume = _maxVolume;
 
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetVolume, _volumeFadeSpeed * Time.deltaTime);
+        yield return SoundVolumeReacher(targetVolume);
+        targetVolume = _minVolume;
+        yield return SoundVolumeReacher(targetVolume);
+
+        if (_isTriggered == false)
+        {
+            _audioSource.Stop();
+            _animator.SetBool(_alarmTriggerHash, _isTriggered);
+        }
+    }
+
+    private IEnumerator SoundVolumeReacher(float targetValue)
+    {
+        while (_audioSource.volume != targetValue)
+        {
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetValue, _volumeFadeSpeed * Time.deltaTime);
 
             yield return null;
         }
