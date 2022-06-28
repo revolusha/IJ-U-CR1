@@ -15,11 +15,12 @@ public class AlarmTrigger : MonoBehaviour
     private bool _isPlayingSound;
     private bool _isVolumeFadeOut;
     private float _passedTime;
-    private string _alarmTrigger;
+    private int _alarmTriggerHash;
 
     private void Start()
     {
         _animator = GetComponentInChildren<Animator>();
+        _alarmTriggerHash = Animator.StringToHash("IsInside");
         _isTriggered = false;
         _isPlayingSound = false;
         _isVolumeFadeOut = false;
@@ -31,7 +32,7 @@ public class AlarmTrigger : MonoBehaviour
         if (collider.TryGetComponent<Robber>(out Robber robber))
         {
             _isTriggered = true;
-            _animator.SetBool("IsInside", _isTriggered);
+            _animator.SetBool(_alarmTriggerHash, _isTriggered);
         }
     }
 
@@ -41,7 +42,7 @@ public class AlarmTrigger : MonoBehaviour
         {
             _isTriggered = false;
             _isPlayingSound = false;
-            _animator.SetBool("IsInside", _isTriggered);
+            _animator.SetBool(_alarmTriggerHash, _isTriggered);
         }
     }
 
