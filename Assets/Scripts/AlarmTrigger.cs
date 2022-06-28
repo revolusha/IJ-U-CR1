@@ -6,8 +6,7 @@ public class AlarmTrigger : MonoBehaviour
     [SerializeField] private AudioSource _audioSource;
     [SerializeField] private float _maxVolume = 0.4f;
     [SerializeField] private float _minVolume = 0.1f;
-    [SerializeField] private float _volumeFadeSpeed = 3;
-    [SerializeField] private float _secondsToChangeVolumeFadeDirection = 3;
+    [SerializeField] private float _volumeFadeSpeed = 2;
     [SerializeField] private float _currentVolume;
 
     private Animator _animator;
@@ -21,6 +20,7 @@ public class AlarmTrigger : MonoBehaviour
     {
         _animator = GetComponentInChildren<Animator>();
         _alarmTriggerHash = Animator.StringToHash("IsInside");
+        _audioSource.volume = _minVolume;
         _isTriggered = false;
         _isPlayingSound = false;
         _isVolumeFadeOut = false;
@@ -74,11 +74,11 @@ public class AlarmTrigger : MonoBehaviour
 
         while (isDoingAlways)
         {
-            if (_audioSource.volume > _maxVolume)
+            if (_audioSource.volume >= _maxVolume)
             {
                 _isVolumeFadeOut = true;
             }
-            else if (_audioSource.volume < _minVolume)
+            else if (_audioSource.volume <= _minVolume)
             {
                 _isVolumeFadeOut = false;
             }
